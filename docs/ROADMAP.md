@@ -75,39 +75,66 @@ Ghi chú kỹ thuật:
 - Modal đăng nhập mới là UI, chưa có authentication backend.
 - Một số chuỗi tiếng Việt trong source đang bị lỗi encoding và cần cleanup.
 
-## Phase 3: AI Analyze
+## Phase 3: AI Analyze (Hoàn thành)
 
-Mục tiêu: thay fake analyze bằng service dùng AI thật.
+Mục tiêu: thay fake analyze bằng service dùng AI.
 
-Việc cần làm:
-
+Đã làm:
 - Tạo `app/services/analyze_service.py`.
 - Tạo `app/services/ai_service.py`.
+- Tách prompt và tag context sang `app/services/ai_prompts.py`.
 - Cấu hình provider qua `.env`.
-- Kết nối Gemini API hoặc OpenAI API.
+- Kết nối Gemini API.
 - Yêu cầu AI trả về JSON nghiêm ngặt.
 - Validate output từ AI bằng Pydantic.
-- Thêm xử lý fallback khi AI trả JSON sai.
-- Đồng bộ frontend để hiển thị lỗi analyze rõ ràng hơn.
-
-Response analyze mục tiêu:
-
+- Parse response JSON và xử lý trường hợp provider trả kèm code fence.
+- Đồng bộ route analyze để trả lỗi `ANALYZE_FAILED` khi provider hoặc validate lỗi.
+- Gọi API Gemini và response ok:
 ```json
 {
-  "translated_vi": "Tôi muốn cải thiện tiếng Anh của mình",
-  "input_type": "sentence",
-  "items": [
-    {
-      "text": "improve",
-      "type": "word",
-      "meaning_vi": "cải thiện",
-      "explanation_vi": "Làm cho điều gì đó tốt hơn",
-      "example_en": "I want to improve my English.",
-      "example_vi": "Tôi muốn cải thiện tiếng Anh của mình."
-    }
-  ]
+    "translated_vi": "Tôi muốn cải thiện kỹ năng lập trình của mình.",
+    "input_type": "sentence",
+    "items": [
+        {
+            "text": "improve",
+            "type": "word",
+            "meaning_vi": "cải thiện",
+            "explanation_vi": "Làm cho một kỹ năng hoặc một thứ gì đó trở nên tốt hơn.",
+            "example_en": "I want to improve my English speaking skills.",
+            "example_vi": "Tôi muốn cải thiện kỹ năng nói tiếng Anh của mình."
+        },
+        {
+            "text": "coding skills",
+            "type": "phrase",
+            "meaning_vi": "kỹ năng lập trình",
+            "explanation_vi": "Khả năng viết mã nguồn (code) để tạo ra các chương trình hoặc ứng dụng.",
+            "example_en": "Practicing every day is the best way to build coding skills.",
+            "example_vi": "Luyện tập mỗi ngày là cách tốt nhất để xây dựng kỹ năng lập trình."
+        },
+        {
+            "text": "coding",
+            "type": "word",
+            "meaning_vi": "việc lập trình / viết mã",
+            "explanation_vi": "Hành động viết các dòng lệnh để máy tính thực hiện một công việc nào đó.",
+            "example_en": "I started learning coding when I was twelve.",
+            "example_vi": "Tôi bắt đầu học lập trình khi tôi 12 tuổi."
+        },
+        {
+            "text": "skills",
+            "type": "word",
+            "meaning_vi": "kỹ năng",
+            "explanation_vi": "Những khả năng hoặc kiến thức chuyên môn bạn có được qua học tập và rèn luyện.",
+            "example_en": "Problem-solving is one of the most important skills for a developer.",
+            "example_vi": "Giải quyết vấn đề là một trong những kỹ năng quan trọng nhất đối với một lập trình viên."
+        }
+    ]
 }
 ```
+Ghi chú kỹ thuật:
+
+- Prompt chính nằm trong `api/app/services/ai_prompts.py`.
+- `AI_DEFAULT_TAG` được dùng khi request không truyền `tags`.
+- Frontend đã có thể gọi `POST /api/analyze`; lỗi analyze từ backend có mã `ANALYZE_FAILED`.
 
 ## Phase 4: Tối Ưu Dữ Liệu
 
@@ -197,12 +224,3 @@ Việc cần làm:
 - Thêm log cho lỗi quan trọng.
 - Thêm cấu hình production cho FastAPI và Nginx.
 - Cleanup lỗi encoding tiếng Việt trong source và tài liệu cũ.
-
-## Việc Nên Làm Ngay Sau Phase 2
-
-1. Sửa lỗi encoding tiếng Việt trong source code và tài liệu còn sót.
-2. Tách fake analyze logic sang service layer.
-3. Thêm `.env.example` nếu chưa có trong repo.
-4. Thêm test backend cho CRUD vocabulary.
-5. Thêm biến môi trường frontend cho API base URL.
-6. Chuẩn bị tích hợp AI thật cho Phase 3.

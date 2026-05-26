@@ -13,14 +13,25 @@ function MainLayout({
   onDictionarySearch
 }) {
   return (
-    <div className={cn('grid min-h-screen bg-background', isSidebarCollapsed ? 'lg:grid-cols-[84px_1fr]' : 'lg:grid-cols-[280px_1fr]')}>
-      <aside className={cn('hidden border-r bg-card px-4 py-6 lg:flex lg:flex-col', isSidebarCollapsed && 'items-center px-3')}>
-        <div className="w-full">
-          <div className={cn('flex items-center gap-3', isSidebarCollapsed && 'justify-center')}>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm">
-              K
+    <div className="min-h-screen bg-background relative">
+      {/* Fixed Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 h-screen bg-card border-r transition-all duration-300",
+          isSidebarCollapsed ? "w-[84px]" : "w-[280px]"
+        )}
+      >
+        <div className={cn('flex flex-col h-full px-4 py-6', isSidebarCollapsed && 'items-center px-3')}
+        >
+          {/* Logo */}
+          <div className="w-full">
+            <div className={cn('flex items-center gap-3', isSidebarCollapsed && 'justify-center')}
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm">
+                K
+              </div>
+              {!isSidebarCollapsed && <h1 className="text-xl font-bold tracking-normal">K-Dict</h1>}
             </div>
-            {!isSidebarCollapsed && <h1 className="text-xl font-bold tracking-normal">K-Dict</h1>}
           </div>
           {!isSidebarCollapsed && <p className="ml-12 mt-1 text-xs text-muted-foreground">Học từ vựng lập trình</p>}
         </div>
@@ -82,21 +93,20 @@ function MainLayout({
             )}
           </Button>
         </div>
-
-        {!isSidebarCollapsed && (
-          <div className="mt-4 text-xs text-muted-foreground">
-            <div>K-Dict v2.0 MVP</div>
-            <div>The Modern Lexicon</div>
-          </div>
-        )}
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-col">
-        <Header onDictionarySearch={onDictionarySearch} />
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10">
-          {children}
-        </main>
-      </div>
+        {/* Main content shifted by sidebar width */}
+        <div
+          className={cn(
+            "flex flex-col min-h-screen",
+            isSidebarCollapsed ? "ml-[84px]" : "ml-[280px]"
+          )}
+        >
+          <Header onDictionarySearch={onDictionarySearch} />
+          <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10">
+            {children}
+          </main>
+        </div>
     </div>
   )
 }

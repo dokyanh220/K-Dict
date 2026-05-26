@@ -1,11 +1,36 @@
-import { useState } from 'react'
-
+import { useState, useEffect } from 'react'
 import { Button } from './ui/button'
-import { Search } from './icons'
+import { Search, Moon, Sun } from './icons'
 import { Input } from './ui/input'
 
 function Header({ onDictionarySearch }) {
   const [keyword, setKeyword] = useState('')
+  const [theme, setTheme] = useState(() => {
+    const stored = typeof window !== 'undefined' && localStorage.getItem('kdict-theme')
+    if (stored) return stored
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+    return prefersDark ? 'dark' : 'light'
+  })
+
+  // Apply theme to html element
+  const applyTheme = (t) => {
+    const root = typeof document !== 'undefined' && document.documentElement
+    if (!root) return
+    root.classList.remove('light', 'dark')
+    root.classList.add(t)
+    localStorage.setItem('kdict-theme', t)
+  }
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light'
+    setTheme(newTheme)
+    applyTheme(newTheme)
+  }
+
+  // Ensure theme is applied on mount
+  useEffect(() => {
+    applyTheme(theme)
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -43,6 +68,18 @@ function Header({ onDictionarySearch }) {
           </Button>
         </div>
       </form>
+
+      {/* Theme toggle button */}
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="ml-2"
+        title="Toggle light/dark mode"
+      >
+        {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+      </Button>
     </header>
   )
 }

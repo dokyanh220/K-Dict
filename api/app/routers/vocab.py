@@ -106,7 +106,8 @@ def update_vocab_item(
     item = db.get(VocabItem, item_id)
 
     if not item:
-        raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng")
+        raise HTTPException(
+            status_code=404, detail="Không tìm thấy từ vựng")
 
     update_data = payload.model_dump(exclude_unset=True)
 

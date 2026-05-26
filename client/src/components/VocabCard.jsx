@@ -21,17 +21,14 @@ function VocabCard({ item, actionType = 'save', onAction, isSaved = false, isSav
 
   return (
     <Card className="transition-shadow hover:shadow-soft">
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
-        <div className="min-w-0 space-y-2">
+      <CardHeader className="flex items-center justify-between gap-4 pb-3">
+        <div className="flex flex-col">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="break-words text-lg font-semibold leading-snug tracking-normal">{text}</h3>
-            <Badge variant="outline" className={cn('uppercase', typeClass)}>
-              {type}
-            </Badge>
+            <Badge variant="outline" className={cn('uppercase', typeClass)}>{type}</Badge>
           </div>
           <p className="text-base font-medium text-primary">{meaning_vi}</p>
         </div>
-
         {actionType === 'save' ? (
           <Button
             type="button"

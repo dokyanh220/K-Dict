@@ -7,7 +7,7 @@ Backend FastAPI cho dự án K-Dict.
 - API kiểm tra trạng thái hệ thống.
 - API CRUD từ vựng.
 - Lưu dữ liệu bằng SQLite.
-- API analyze giả lập để frontend có thể phát triển sớm.
+- API analyze dùng Gemini AI để dịch, nhận diện loại input và gợi ý vocabulary.
 
 ## Cài Đặt
 
@@ -74,16 +74,26 @@ python scripts/showdatabase.py --all-tables
 | `PUT` | `/api/vocab/{item_id}` | Cập nhật từ vựng |
 | `DELETE` | `/api/vocab/{item_id}` | Xóa từ vựng |
 
+## Cấu Hình AI
+
+Backend đọc cấu hình AI từ `.env`:
+
+```txt
+AI_PROVIDER=gemini
+AI_API_KEY=your_gemini_api_key
+AI_MODEL=gemini-3-flash-preview
+AI_DEFAULT_TAG=programmer
+```
+
+Prompt analyze nằm tại `app/services/ai_prompts.py` để dễ mở rộng tag, output rule và product context.
+
 ## Ghi Chú Phát Triển
 
-Trước khi làm frontend, backend nên hoàn thiện các việc sau:
+Các việc nên cleanup ở phase tiếp theo:
 
-1. Đồng bộ `schemas.py` với `models.py`.
-2. Hoàn thiện `requirements.txt`.
-3. Sửa lỗi encoding tiếng Việt trong fake analyze response.
-4. Thêm kiểm tra dữ liệu trùng.
-5. Thêm phân trang.
-6. Thêm test.
+1. Thêm test tự động cho API và service.
+2. Đồng bộ toàn bộ lỗi router sang `AppException`.
+3. Cleanup các text/tài liệu cũ nếu còn lỗi encoding.
 
 Xem thêm:
 

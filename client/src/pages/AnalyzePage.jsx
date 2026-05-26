@@ -37,7 +37,7 @@ function AnalyzePage() {
     setResult(null)
 
     try {
-      const data = await vocabApi.analyzeText(text)
+      const data = await vocabApi.analyzeText(text, ['programmer'])
       setResult(data)
     } catch (err) {
       setError(err.message || 'Có lỗi xảy ra trong quá trình phân tích văn bản.')

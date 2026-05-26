@@ -24,6 +24,10 @@ api/
 |   +-- routers/
 |   |   +-- analyze.py
 |   |   +-- vocab.py
+|   +-- services/
+|   |   +-- ai_prompts.py
+|   |   +-- ai_service.py
+|   |   +-- analyze_service.py
 |   +-- database.py
 |   +-- main.py
 |   +-- models.py
@@ -54,7 +58,7 @@ Quản lý cấu hình runtime bằng `pydantic-settings`.
 - `app_name`, `app_env`, `app_debug`.
 - `database_url`, mặc định là `sqlite:///./data/vocab.db`.
 - `cors_origins`, mặc định hỗ trợ frontend Vite ở `localhost:5173`.
-- `ai_provider`, `ai_api_key` để chuẩn bị cho Phase 3.
+- `ai_provider`, `ai_api_key`, `ai_model`, `ai_default_tag` cho Gemini analyze service.
 
 ### `app/core/errors.py`
 
@@ -138,8 +142,34 @@ Tính năng đã có:
 Router phân tích text tiếng Anh.
 
 - Nhận input tiếng Anh qua `POST /api/analyze`.
+- Nhận optional `tags` để ưu tiên ngữ cảnh học từ vựng.
 - Trả về `translated_vi`, `input_type` và danh sách item gợi ý để lưu.
-- Hiện vẫn dùng fake response. AI thật sẽ được tích hợp ở Phase 3.
+- Gọi `AnalyzeService`, validate output AI và chuẩn hóa lỗi thành `ANALYZE_FAILED`.
+
+### `app/services/analyze_service.py`
+
+Service nghiệp vụ cho analyze.
+
+- Gọi AI service để phân tích text.
+- Validate output bằng Pydantic model nội bộ trước khi trả response.
+- Chuyển lỗi AI hoặc lỗi validate thành `AnalyzeServiceError`.
+
+### `app/services/ai_service.py`
+
+Service tích hợp Gemini.
+
+- Làm sạch input text và giới hạn độ dài.
+- Normalize `tags`, fallback về `ai_default_tag` khi không có tag hợp lệ.
+- Gọi Gemini bằng `google-genai`.
+- Parse JSON response và loại bỏ code fence nếu provider trả dư định dạng markdown.
+
+### `app/services/ai_prompts.py`
+
+Module quản lý prompt dùng chung cho AI analyze.
+
+- Chứa `MASTER_ANALYZE_PROMPT`.
+- Chứa `TAG_CONTEXTS` cho các nhóm học như `programmer`, `doctor`, `chef`, `student`, `business`, `travel`.
+- Cung cấp `build_analyze_prompt()` và `build_tag_context()` để phát triển prompt tập trung một nơi.
 
 ## Frontend: `client/`
 
@@ -285,7 +315,8 @@ docs/
 ## Ghi Chú Hiện Trạng
 
 - Backend và frontend đã hoàn thành MVP ở mức chạy local.
-- Analyze vẫn là fake response, chưa dùng AI provider thật.
+- Analyze đã dùng Gemini AI thật thông qua `ai_service.py`.
+- Prompt analyze đã được tách sang `ai_prompts.py` để dễ phát triển.
 - Frontend hiện dùng TailwindCSS + shadcn/ui. `App.css` chỉ còn là placeholder mỏng.
 - Một số text tiếng Việt trong code cũ đang bị lỗi encoding, nên cần cleanup ở phase bảo trì gần nhất.
 - `client/node_modules`, `client/dist`, `__pycache__` và database local không nên được mô tả như source chính của dự án.

@@ -36,10 +36,10 @@ const request = async (path, options = {}) => {
 }
 
 export const vocabApi = {
-  analyzeText: (text) => {
+  analyzeText: (text, tags = ['programmer']) => {
     return request('/api/analyze', {
       method: 'POST',
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text, tags })
     })
   },
 

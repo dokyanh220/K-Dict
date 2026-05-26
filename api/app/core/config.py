@@ -11,8 +11,10 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
-    ai_provider: str = "fake"
-    ai_api_key: str | None = None
+    ai_provider: str = "gemini"
+    ai_api_key: str
+    ai_model: str = "gemini-3-flash-preview"
+    ai_default_tag: str = "programmer"
 
     model_config = SettingsConfigDict(
         env_file=".env",

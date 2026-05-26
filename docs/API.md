@@ -32,13 +32,14 @@ Response hiện tại:
 
 Phân tích text tiếng Anh và trả về bản dịch tiếng Việt cùng danh sách item gợi ý để lưu.
 
-Trạng thái hiện tại: fake response. Tích hợp AI thật nằm ở Phase 3.
+Trạng thái hiện tại: dùng Gemini AI thông qua backend service. Prompt phân tích được quản lý tập trung trong `api/app/services/ai_prompts.py`.
 
 Request:
 
 ```json
 {
-  "text": "I want to improve my English"
+  "text": "I want to improve my coding skills",
+  "tags": ["programmer"]
 }
 ```
 
@@ -46,25 +47,33 @@ Validate:
 
 - `text` là bắt buộc.
 - Độ dài `text` từ 1 đến 5000 ký tự.
+- `tags` là optional. Nếu không truyền, backend dùng `AI_DEFAULT_TAG` trong cấu hình.
 
 Response:
 
 ```json
 {
-  "translated_vi": "Dịch nghĩa: I want to improve my English",
+  "translated_vi": "Tôi muốn cải thiện kỹ năng lập trình của mình.",
   "input_type": "sentence",
   "items": [
     {
-      "text": "I want to improve my English",
-      "type": "sentence",
-      "meaning_vi": "Nghĩa ví dụ",
-      "explanation_vi": "Phần dịch nghĩa AI",
-      "example_en": "I want to improve my English",
-      "example_vi": "Dịch nghĩa: I want to improve my English"
+      "text": "improve",
+      "type": "word",
+      "meaning_vi": "cải thiện",
+      "explanation_vi": "Làm cho một kỹ năng hoặc một thứ gì đó trở nên tốt hơn.",
+      "example_en": "I want to improve my English speaking skills.",
+      "example_vi": "Tôi muốn cải thiện kỹ năng nói tiếng Anh của mình."
     }
   ]
 }
 ```
+
+Ghi chú kỹ thuật:
+
+- Backend gọi model theo `AI_MODEL`.
+- Provider hiện tại là Gemini.
+- AI response được yêu cầu trả JSON nghiêm ngặt và được validate bằng Pydantic trước khi trả về client.
+- Khi provider lỗi, response rỗng, JSON sai hoặc output sai schema, API trả `ANALYZE_FAILED` với HTTP `502`.
 
 ## Vocabulary
 
