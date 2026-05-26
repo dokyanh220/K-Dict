@@ -23,10 +23,10 @@ function AnalyzeForm({ onAnalyze, isLoading }) {
   }
 
   return (
-    <Card className="shadow-soft">
+    <Card className="card-elevated border" style={{ borderColor: 'var(--glass-border)' }}>
       <form onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle className="text-lg">Nhập nội dung tiếng Anh</CardTitle>
+          <CardTitle className="font-headline text-xl font-semibold">Nhập nội dung tiếng Anh</CardTitle>
           <CardDescription>
             Nhập từ, cụm từ hoặc câu để dịch và trích xuất từ vựng.
           </CardDescription>
@@ -35,7 +35,7 @@ function AnalyzeForm({ onAnalyze, isLoading }) {
           <div className="space-y-2">
             <Textarea
               id="analyze-textarea"
-              className="min-h-36 resize-none"
+              className="min-h-36 resize-none bg-background/50 focus-glow transition-all duration-200"
               placeholder="Ví dụ: I want to improve my coding skills..."
               value={text}
               onChange={(e) => {
@@ -48,7 +48,11 @@ function AnalyzeForm({ onAnalyze, isLoading }) {
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="bubble-up gap-2"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />

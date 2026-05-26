@@ -1,9 +1,9 @@
 import { useState } from 'react'
+import { ThemeProvider } from './components/ThemeProvider'
 import MainLayout from './layouts/MainLayout'
 import AnalyzePage from './pages/AnalyzePage'
 import DictionaryPage from './pages/DictionaryPage'
 import AuthModal from './components/AuthModal'
-import './App.css'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('analyze')
@@ -25,7 +25,7 @@ function App() {
   }
 
   return (
-    <>
+    <ThemeProvider>
       <MainLayout
         currentPage={currentPage}
         onPageChange={handlePageChange}
@@ -41,11 +41,11 @@ function App() {
         )}
       </MainLayout>
 
-      <AuthModal 
-        isOpen={isAuthOpen} 
-        onClose={() => setIsAuthOpen(false)} 
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
       />
-    </>
+    </ThemeProvider>
   )
 }
 

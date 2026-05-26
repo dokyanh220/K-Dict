@@ -3,27 +3,124 @@
 @tailwind utilities;
 
 @layer base {
+  /* ===== LIGHT MODE (default) ===== */
   :root {
     --background: 210 40% 98%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 215 25% 12%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 215 25% 12%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-    --primary: 207 67% 53%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 205 68% 49%;
+    --popover-foreground: 215 25% 12%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 25% 12%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 215 25% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
     --radius: 0.5rem;
+
+    /* Sidebar specific */
+    --sidebar: 210 33% 96%;
+    --sidebar-foreground: 215 25% 12%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-active-bg: 217 91% 95%;
+    --sidebar-active-bar: 217 91% 60%;
+
+    /* Glass effect */
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(226, 232, 240, 0.8);
+    --glass-blur: 12px;
+
+    /* Elevation */
+    --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+    --shadow-card-hover: 0 8px 24px rgba(37, 99, 235, 0.1), 0 4px 8px rgba(15, 23, 42, 0.06);
+    --shadow-elevated: 0 16px 40px rgba(15, 23, 42, 0.08);
+
+    /* Semantic vocab colors */
+    --vocab-word-bg: rgba(16, 185, 129, 0.08);
+    --vocab-word-border: rgba(16, 185, 129, 0.2);
+    --vocab-word-text: #059669;
+    --vocab-phrase-bg: rgba(79, 70, 229, 0.08);
+    --vocab-phrase-border: rgba(79, 70, 229, 0.2);
+    --vocab-phrase-text: #4338ca;
+    --vocab-sentence-bg: rgba(245, 158, 11, 0.08);
+    --vocab-sentence-border: rgba(245, 158, 11, 0.2);
+    --vocab-sentence-text: #d97706;
+  }
+
+  /* ===== DARK MODE ===== */
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 226 25% 92%;
+
+    --card: 220 40% 13%;
+    --card-foreground: 226 25% 92%;
+
+    --popover: 220 40% 13%;
+    --popover-foreground: 226 25% 92%;
+
+    --primary: 207 67% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 226 25% 92%;
+
+    --muted: 222 30% 14%;
+    --muted-foreground: 218 11% 57%;
+
+    --accent: 222 25% 18%;
+    --accent-foreground: 226 25% 92%;
+
+    --destructive: 0 63% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 207 67% 53%;
+
+    /* Sidebar specific - dark */
+    --sidebar: 220 45% 10%;
+    --sidebar-foreground: 226 25% 92%;
+    --sidebar-border: 207 67% 53% / 0.15;
+    --sidebar-active-bg: 207 67% 53% / 0.1;
+    --sidebar-active-bar: 207 67% 53%;
+
+    /* Glass effect - dark */
+    --glass-bg: rgba(15, 23, 42, 0.8);
+    --glass-border: rgba(60, 148, 212, 0.15);
+    --glass-blur: 12px;
+
+    /* Elevation - dark */
+    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
+    --shadow-card-hover: 0 8px 24px rgba(60, 148, 212, 0.15), 0 4px 8px rgba(0, 0, 0, 0.12);
+    --shadow-elevated: 0 16px 40px rgba(0, 0, 0, 0.3);
+
+    /* Semantic vocab colors - dark */
+    --vocab-word-bg: rgba(16, 185, 129, 0.1);
+    --vocab-word-border: rgba(16, 185, 129, 0.25);
+    --vocab-word-text: #34d399;
+    --vocab-phrase-bg: rgba(79, 70, 229, 0.1);
+    --vocab-phrase-border: rgba(79, 70, 229, 0.25);
+    --vocab-phrase-text: #a5b4fc;
+    --vocab-sentence-bg: rgba(245, 158, 11, 0.1);
+    --vocab-sentence-border: rgba(245, 158, 11, 0.25);
+    --vocab-sentence-text: #fbbf24;
   }
 
   * {
@@ -32,12 +129,134 @@
 
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
-    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
 
   button,
   input,
   textarea {
     font: inherit;
+  }
+
+  /* Smooth transitions for theme changes */
+  html.transitioning,
+  html.transitioning *,
+  html.transitioning *::before,
+  html.transitioning *::after {
+    transition: background-color 0.3s ease, color 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+  }
+}
+
+@layer components {
+  /* Glass surface effect */
+  .glass-surface {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-color: var(--glass-border);
+  }
+
+  /* Elevated card with design system shadows */
+  .card-elevated {
+    box-shadow: var(--shadow-card);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s ease;
+  }
+
+  /* Bubble-up hover animation */
+  .bubble-up {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.3s ease;
+  }
+
+  .bubble-up:hover {
+    transform: translateY(-4px) scale(1.005);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Vocab type badge styles */
+  .badge-word {
+    background: var(--vocab-word-bg);
+    border-color: var(--vocab-word-border);
+    color: var(--vocab-word-text);
+  }
+
+  .badge-phrase {
+    background: var(--vocab-phrase-bg);
+    border-color: var(--vocab-phrase-border);
+    color: var(--vocab-phrase-text);
+  }
+
+  .badge-sentence {
+    background: var(--vocab-sentence-bg);
+    border-color: var(--vocab-sentence-border);
+    color: var(--vocab-sentence-text);
+  }
+
+  /* Focus glow for inputs */
+  .focus-glow:focus,
+  .focus-glow:focus-within {
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25);
+    border-color: hsl(var(--ring));
+  }
+
+  /* Headline font */
+  .font-headline {
+    font-family: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Label/metadata font */
+  .font-label {
+    font-family: 'Space Grotesk', ui-monospace, monospace;
+  }
+
+  /* Sidebar nav item active indicator */
+  .nav-active-bar {
+    position: relative;
+  }
+
+  .nav-active-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    border-radius: 0 4px 4px 0;
+    background: hsl(var(--sidebar-active-bar));
+    transition: opacity 0.2s ease;
+  }
+
+  /* Staggered entrance animation */
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-slide-up {
+    animation: fadeSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  /* Pulse glow for loading */
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }

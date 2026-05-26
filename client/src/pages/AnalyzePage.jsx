@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { vocabApi } from '../api/vocabApi'
-import { AlertCircle } from '../components/icons'
+import { AlertCircle, Wand2 } from '../components/icons'
 import AnalyzeForm from '../components/AnalyzeForm'
 import AnalyzeResult from '../components/AnalyzeResult'
 import { Card, CardContent } from '../components/ui/card'
@@ -80,18 +80,28 @@ function AnalyzePage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-normal">Phân tích văn bản & Dịch nghĩa</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+      {/* Page header */}
+      <div className="animate-fade-slide-up">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <Wand2 className="h-5 w-5 text-primary" />
+          </div>
+          <h2 className="font-headline text-2xl font-semibold tracking-tight">
+            Phân tích văn bản & Dịch nghĩa
+          </h2>
+        </div>
+        <p className="ml-[52px] max-w-3xl text-sm leading-6 text-muted-foreground">
           Nhập nội dung tiếng Anh để nhận bản dịch tiếng Việt và tự động trích xuất từ vựng, cụm từ quan trọng để lưu vào sổ từ cá nhân.
         </p>
       </div>
 
-      <AnalyzeForm onAnalyze={handleAnalyzeText} isLoading={isLoading} />
+      <div className="animate-fade-slide-up" style={{ animationDelay: '100ms' }}>
+        <AnalyzeForm onAnalyze={handleAnalyzeText} isLoading={isLoading} />
+      </div>
 
       {(error || saveError) && (
-        <Card className="border-destructive/30 bg-destructive/5">
+        <Card className="card-elevated border-destructive/30 bg-destructive/5 animate-fade-slide-up">
           <CardContent className="flex gap-3 p-4 text-sm text-destructive">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{error || saveError}</span>
@@ -100,12 +110,14 @@ function AnalyzePage() {
       )}
 
       {result && (
-        <AnalyzeResult
-          result={result}
-          onSaveItem={handleSaveItem}
-          savedItemKeys={savedKeys}
-          savingKeys={savingKeys}
-        />
+        <div className="animate-fade-slide-up" style={{ animationDelay: '150ms' }}>
+          <AnalyzeResult
+            result={result}
+            onSaveItem={handleSaveItem}
+            savedItemKeys={savedKeys}
+            savingKeys={savingKeys}
+          />
+        </div>
       )}
     </div>
   )

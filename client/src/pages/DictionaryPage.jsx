@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { vocabApi } from '../api/vocabApi'
+import { BookOpen } from '../components/icons'
 import SearchBar from '../components/SearchBar'
 import TypeFilter from '../components/TypeFilter'
 import VocabList from '../components/VocabList'
@@ -76,47 +77,64 @@ function DictionaryPage({ searchQuery }) {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-normal">Sổ từ vựng cá nhân</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+    <div className="mx-auto flex max-w-5xl flex-col gap-8">
+      {/* Page header */}
+      <div className="animate-fade-slide-up">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <BookOpen className="h-5 w-5 text-primary" />
+          </div>
+          <h2 className="font-headline text-2xl font-semibold tracking-tight">
+            Sổ từ vựng cá nhân
+          </h2>
+        </div>
+        <p className="ml-[52px] max-w-3xl text-sm leading-6 text-muted-foreground">
           Quản lý các từ vựng, cụm từ và câu tiếng Anh đã lưu. Bạn có thể tìm kiếm nhanh và lọc theo phân loại.
         </p>
       </div>
 
-      <Card>
-        <CardContent className="flex flex-col gap-4 p-4 sm:p-5">
+      {/* Search & Filter */}
+      <Card className="card-elevated animate-fade-slide-up" style={{ animationDelay: '80ms' }}>
+        <CardContent className="flex flex-col gap-4 p-5 pt-5">
           <SearchBar value={search} onChange={handleSearchChange} />
           <TypeFilter selectedType={type} onTypeChange={handleTypeChange} />
         </CardContent>
       </Card>
 
-      <VocabList
-        items={items}
-        onDelete={handleDeleteItem}
-        isLoading={isLoading}
-        error={error}
-      />
+      {/* Vocabulary list */}
+      <div className="animate-fade-slide-up" style={{ animationDelay: '160ms' }}>
+        <VocabList
+          items={items}
+          onDelete={handleDeleteItem}
+          isLoading={isLoading}
+          error={error}
+        />
+      </div>
 
+      {/* Pagination */}
       {pagination.total_pages > 1 && (
-        <Card>
+        <Card className="card-elevated animate-fade-slide-up" style={{ animationDelay: '200ms' }}>
           <CardContent className="flex flex-col items-center justify-between gap-3 p-4 sm:flex-row">
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setPage(prev => Math.max(prev - 1, 1))}
               disabled={page === 1}
+              className="gap-1"
             >
               Trang trước
             </Button>
-            <span className="text-sm text-muted-foreground">
-              Trang {page} / {pagination.total_pages} · Tổng số {pagination.total} từ
+            <span className="text-sm font-label text-muted-foreground tracking-wide">
+              Trang {page} / {pagination.total_pages} · {pagination.total} từ
             </span>
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setPage(prev => Math.min(prev + 1, pagination.total_pages))}
               disabled={page === pagination.total_pages}
+              className="gap-1"
             >
               Trang sau
             </Button>
