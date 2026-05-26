@@ -2,11 +2,6 @@ import { BookOpen, ChevronRight, LogIn, PanelLeftClose, Wand2 } from './icons'
 import { Button } from './ui/button'
 import { cn } from '../lib/utils'
 
-const NAV_ITEMS = [
-  { key: 'analyze', label: 'Phân tích & Dịch', icon: Wand2 },
-  { key: 'dictionary', label: 'Sổ từ vựng', icon: BookOpen },
-]
-
 function Sidebar({
   currentPage,
   onPageChange,
@@ -14,112 +9,87 @@ function Sidebar({
   onToggleSidebar,
   onOpenAuth,
 }) {
+  const sidebarButtonClass = cn(
+    'w-full gap-0 pl-2 pr-1 transition-all duration-500 ease-in-out border-b border-blue-600',
+    isSidebarCollapsed ? 'justify-center' : 'justify-start'
+  )
+
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen overflow-hidden border-r glass-surface',
-        'transition-[width] duration-300 ease-out-expo',
-        isSidebarCollapsed ? 'w-[72px]' : 'w-[280px]'
+        'fixed left-0 top-0 z-40 h-screen overflow-hidden border-r bg-card transition-[width] duration-500 ease-in-out',
+        isSidebarCollapsed ? 'w-[76px]' : 'w-[260px]'
       )}
-      style={{ borderColor: 'var(--glass-border)' }}
     >
-      <div className="flex flex-col h-full py-6">
+      <div className={cn('flex flex-col h-full px-1 py-6', isSidebarCollapsed && 'items-center')}>
         {/* Logo */}
-        <div className={cn('flex items-center gap-3 px-5', isSidebarCollapsed && 'justify-center px-0')}>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground shadow-sm">
-            K
-          </div>
-          <div
-            className={cn(
-              'overflow-hidden transition-all duration-300 ease-out-expo',
-              isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-            )}
-          >
-            <h1 className="font-headline text-xl font-bold tracking-tight whitespace-nowrap">K-Dict</h1>
-            <p className="text-[11px] text-muted-foreground whitespace-nowrap">Học từ vựng lập trình</p>
+        <div className="w-full">
+          <div className={cn('flex items-center gap-3', isSidebarCollapsed && 'justify-center')}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-base font-bold text-primary-foreground shadow-sm">
+              K
+            </div>
+            {!isSidebarCollapsed && <h1 className="text-xl font-bold tracking-normal">K-Dict</h1>}
           </div>
         </div>
+        {!isSidebarCollapsed && <p className="ml-12 mt-1 text-xs text-muted-foreground">Học từ vựng lập trình</p>}
 
-        {/* Navigation */}
-        <nav className="mt-8 flex flex-col gap-1 px-3">
-          {NAV_ITEMS.map(({ key, label, icon: Icon }) => {
-            const isActive = currentPage === key
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => onPageChange(key)}
-                title={label}
-                aria-label={label}
-                className={cn(
-                  'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
-                  'transition-all duration-200 ease-out-expo',
-                  isActive
-                    ? 'bg-primary/10 text-primary nav-active-bar'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                  isSidebarCollapsed && 'justify-center px-0'
-                )}
-              >
-                <Icon className="h-[18px] w-[18px] shrink-0" />
-                <span
-                  className={cn(
-                    'overflow-hidden whitespace-nowrap transition-all duration-300 ease-out-expo',
-                    isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-                  )}
-                >
-                  {label}
-                </span>
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Bottom area */}
-        <div className="mt-auto flex flex-col gap-2 px-3">
-          {/* Login button */}
+        <nav className="mt-8 flex w-full flex-col gap-2">
           <Button
             type="button"
-            onClick={onOpenAuth}
-            title="Đăng nhập"
-            aria-label="Đăng nhập"
-            className={cn(
-              'gap-3 bg-primary text-primary-foreground shadow-sm bubble-up',
-              'hover:bg-primary/90',
-              isSidebarCollapsed ? 'h-10 w-10 p-0 justify-center' : 'w-full justify-start px-3'
-            )}
+            variant={currentPage === 'analyze' ? 'secondary' : 'ghost'}
+            size="default"
+            onClick={() => onPageChange('analyze')}
+            className={sidebarButtonClass}
+            title="Phân tích & Dịch"
           >
-            <LogIn className="h-[18px] w-[18px] shrink-0" />
-            <span
-              className={cn(
-                'overflow-hidden whitespace-nowrap transition-all duration-300 ease-out-expo',
-                isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-              )}
-            >
-              Đăng nhập
-            </span>
+            <Wand2 className="h-4 w-4" />
+            {!isSidebarCollapsed && <span>Phân tích & Dịch</span>}
           </Button>
 
-          {/* Collapse toggle */}
-          <button
+          <Button
             type="button"
+            variant={currentPage === 'dictionary' ? 'secondary' : 'ghost'}
+            size="default"
+            onClick={() => onPageChange('dictionary')}
+            className={sidebarButtonClass}
+            title="Sổ từ vựng của tôi"
+          >
+            <BookOpen className="h-4 w-4" />
+            {!isSidebarCollapsed && <span>Sổ từ vựng của tôi</span>}
+          </Button>
+        </nav>
+
+        <div className="mt-auto flex w-full flex-col gap-2">
+          <Button
+            type="button"
+            variant="default"
+            size={isSidebarCollapsed ? 'icon' : 'default'}
+            onClick={onOpenAuth}
+            className={cn(!isSidebarCollapsed && 'justify-start')}
+            title="Đăng nhập"
+            style={{ backgroundColor: '#2563EB', color: '#fff' }}
+          >
+            <LogIn className="h-4 w-4" />
+            {!isSidebarCollapsed && <span>Đăng nhập</span>}
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size={isSidebarCollapsed ? 'icon' : 'default'}
             onClick={onToggleSidebar}
-            title={isSidebarCollapsed ? 'Mở rộng' : 'Thu gọn'}
-            aria-label={isSidebarCollapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground',
-              'transition-all duration-200 ease-out-expo hover:bg-accent hover:text-foreground',
-              isSidebarCollapsed && 'justify-center px-0'
-            )}
+            className={cn('text-muted-foreground', !isSidebarCollapsed && 'justify-start')}
+            title={isSidebarCollapsed ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
           >
             {isSidebarCollapsed ? (
-              <ChevronRight className="h-[18px] w-[18px] shrink-0" />
+              <ChevronRight className="h-4 w-4" />
             ) : (
               <>
-                <PanelLeftClose className="h-[18px] w-[18px] shrink-0" />
-                <span className="overflow-hidden whitespace-nowrap">Thu gọn</span>
+                <PanelLeftClose className="h-4 w-4" />
+                <span>Thu gọn</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </aside>
