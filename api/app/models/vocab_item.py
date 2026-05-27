@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -9,6 +9,7 @@ class VocabItem(Base):
     __tablename__ = "vocab_items"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
     text: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     meaning_vi: Mapped[str] = mapped_column(Text, nullable=False)

@@ -1,10 +1,13 @@
 from typing import Literal
+import logging
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
+from app.core.config import get_settings
 from app.core.errors import AppException, ErrorCode
 from app.services.analyze_service import AnalyzeServiceError, analyze_service
 
 router = APIRouter(prefix="/api/analyze", tags=["Analyze"])
+logger = logging.getLogger(__name__)
 
 
 class AnalyzeRequest(BaseModel):
@@ -29,8 +32,10 @@ def analyze_text(payload: AnalyzeRequest):
     try:
         return analyze_service.analyze(payload.text, tags=payload.tags)
     except AnalyzeServiceError as e:
+        logger.exception("Analyze request failed")
         raise AppException(
             status_code=502,
             code=ErrorCode.ANALYZE_FAILED,
-            message="Analyze service failed"
+            message="Analyze service failed",
+            details=str(e.__cause__ or e) if get_settings().app_debug else None,
         ) from e

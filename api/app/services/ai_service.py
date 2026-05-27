@@ -1,8 +1,12 @@
 import json
+import logging
 from google import genai
 from google.genai import types
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 from app.core.config import get_settings
 from app.services.ai_prompts import build_analyze_prompt
+
+logger = logging.getLogger(__name__)
 
 class AIServiceError(Exception):
     pass
@@ -23,6 +27,19 @@ class GeminiAnalyzeService:
         learning_tags = self._normalize_tags(tags)
         prompt = build_analyze_prompt(cleaned_text, learning_tags)
 
+        try:
+            return self._generate_analyze_result(prompt)
+        except AIServiceError:
+            logger.exception("Gemini analyze failed after retries")
+            raise
+
+    @retry(
+        retry=retry_if_exception_type(AIServiceError),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=0.5, min=0.5, max=2),
+        reraise=True,
+    )
+    def _generate_analyze_result(self, prompt: str) -> dict:
         try:
             response = self.client.models.generate_content(
                 model=self.model,

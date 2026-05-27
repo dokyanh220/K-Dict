@@ -8,7 +8,7 @@ import VocabList from '../components/VocabList'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 
-function DictionaryPage({ searchQuery }) {
+function DictionaryPage({ searchQuery, isAuthenticated, onRequireAuth }) {
   const [items, setItems] = useState([])
   const [search, setSearch] = useState(searchQuery || '')
   const [type, setType] = useState('all')
@@ -17,6 +17,29 @@ function DictionaryPage({ searchQuery }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery)
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto flex max-w-3xl flex-col items-center justify-center gap-5 py-24 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <BookOpen className="h-8 w-8" />
+        </div>
+
+        <div>
+          <h2 className="font-headline text-2xl font-semibold">
+            Đăng nhập để mở sổ từ vựng
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Sổ từ vựng là dữ liệu cá nhân, bạn cần đăng nhập Google để lưu và quản lý từ.
+          </p>
+        </div>
+
+        <Button type="button" onClick={onRequireAuth} className="rounded-xl">
+          Đăng nhập với Google
+        </Button>
+      </div>
+    )
+  }
 
   if (searchQuery !== prevSearchQuery) {
     setPrevSearchQuery(searchQuery)

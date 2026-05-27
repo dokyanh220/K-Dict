@@ -9,7 +9,10 @@ function MainLayout({
   isSidebarCollapsed,
   onToggleSidebar,
   onOpenAuth,
-  onDictionarySearch
+  onDictionarySearch,
+  user,
+  isAuthenticated,
+  onLogout
 }) {
   return (
     <div className="min-h-screen bg-background relative">
@@ -20,13 +23,15 @@ function MainLayout({
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={onToggleSidebar}
         onOpenAuth={onOpenAuth}
+        user={user}
+        isAuthenticated={isAuthenticated}
+        onLogout={onLogout}
       />
-
       {/* Main content shifted by sidebar width */}
       <div
         className={cn(
           'flex flex-col min-h-screen transition-[margin-left] duration-300 ease-out-expo',
-          isSidebarCollapsed ? 'ml-[72px]' : 'ml-[280px]'
+          isSidebarCollapsed ? 'ml-[76px]' : 'ml-[260px]'
         )}
       >
         <Header onDictionarySearch={onDictionarySearch} />

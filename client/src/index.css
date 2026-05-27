@@ -78,7 +78,7 @@
     --primary: 207 67% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 14%;
+    --secondary: 222 47% 11%;
     --secondary-foreground: 226 25% 92%;
 
     --muted: 222 30% 14%;
@@ -95,7 +95,7 @@
     --ring: 207 67% 53%;
 
     /* Sidebar specific - dark */
-    --sidebar: 220 45% 10%;
+    --sidebar: 222 47% 11%;
     --sidebar-foreground: 226 25% 92%;
     --sidebar-border: 207 67% 53% / 0.15;
     --sidebar-active-bg: 207 67% 53% / 0.1;

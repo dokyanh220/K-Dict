@@ -4,9 +4,11 @@ from sqlalchemy.orm import Session
 import math
 
 from app.database import get_db
-from app.models import VocabItem
+from app.models.vocab_item import VocabItem
 from app.schemas import VocabCreate, VocabResponse, VocabUpdate, VocabListResponse, VocabType
 from app.core.errors import AppException, ErrorCode
+from app.core.security import get_current_user
+from app.models import User
 
 router = APIRouter(prefix="/api/vocab", tags=["Vocabulary"])
 
@@ -14,11 +16,16 @@ def normalize_text(text: str) -> str:
     return " ".join(text.strip().lower().split())
 
 @router.post("", response_model=VocabResponse, status_code=status.HTTP_201_CREATED)
-def create_vocab(payload: VocabCreate, db: Session = Depends(get_db)):
+def create_vocab(
+    payload: VocabCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     normalized_text = normalize_text(payload.text)
 
     duplicated_item = (
         db.query(VocabItem).filter(
+            VocabItem.user_id == current_user.id,
             func.lower(VocabItem.text) == normalized_text,
             VocabItem.type == payload.type
         ).first()
@@ -31,7 +38,7 @@ def create_vocab(payload: VocabCreate, db: Session = Depends(get_db)):
             message="Từ vựng đã tồn tại"
         )
 
-    item = VocabItem(**payload.model_dump())
+    item = VocabItem(**payload.model_dump(), user_id=current_user.id)
     item.text = payload.text.strip()
 
     db.add(item)
@@ -46,9 +53,12 @@ def get_vocab_items(
     type: VocabType | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    query = db.query(VocabItem)
+    query = db.query(VocabItem).filter(
+        VocabItem.user_id == current_user.id
+    )
 
     if search:
         keyword = f"%{search.strip()}%"
@@ -85,8 +95,15 @@ def get_vocab_items(
     }
 
 @router.get("/{item_id}", response_model=VocabResponse)
-def get_vocab_item(item_id: int, db: Session = Depends(get_db)):
-    item = db.get(VocabItem, item_id)
+def get_vocab_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    item = db.query(VocabItem).filter(
+        VocabItem.id == item_id,
+        VocabItem.user_id == current_user.id
+    ).first()
 
     if not item:
         raise AppException(
@@ -101,9 +118,13 @@ def get_vocab_item(item_id: int, db: Session = Depends(get_db)):
 def update_vocab_item(
     item_id: int,
     payload: VocabUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    item = db.get(VocabItem, item_id)
+    item = db.query(VocabItem).filter(
+        VocabItem.id == item_id,
+        VocabItem.user_id == current_user.id
+    ).first()
 
     if not item:
         raise HTTPException(
@@ -120,8 +141,15 @@ def update_vocab_item(
     return item
 
 @router.delete("/{item_id}")
-def delete_vocab_item(item_id: int, db: Session = Depends(get_db)):
-    item = db.get(VocabItem, item_id)
+def delete_vocab_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    item = db.query(VocabItem).filter(
+        VocabItem.id == item_id,
+        VocabItem.user_id == current_user.id
+    ).first()
 
     if not item:
         raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng")

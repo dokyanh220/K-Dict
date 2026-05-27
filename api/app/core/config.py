@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     ai_model: str = "gemini-3-flash-preview"
     ai_default_tag: str = "programmer"
 
+    GOOGLE_CLIENT_ID: str
+
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 1440
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

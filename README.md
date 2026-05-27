@@ -1,39 +1,49 @@
 # K-Dict
 
-K-Dict là ứng dụng từ điển tiếng Anh cá nhân, dùng để phân tích text tiếng Anh, lưu từ vựng/cụm từ/câu, ghi nghĩa tiếng Việt, ví dụ và ghi chú cá nhân.
+K-Dict là ứng dụng học từ vựng tiếng Anh lập trình. Ứng dụng hỗ trợ phân tích text tiếng Anh bằng Gemini AI, dịch nhanh sang tiếng Việt, trích xuất từ/cụm từ/câu đáng học, lưu vào sổ từ vựng cá nhân và luyện tập lại qua các màn hình bài tập.
 
-Dự án hiện đã hoàn thành Phase 2: backend FastAPI + SQLite và frontend React/Vite MVP chạy local.
+## Demo
 
-## Mục Tiêu
+![K-Dict profile dashboard](docs/assets/demo-profile.png)
 
-- Lưu từ vựng, cụm từ và câu tiếng Anh.
-- Dịch hoặc giải thích nội dung tiếng Anh sang tiếng Việt.
-- Lưu ví dụ, ghi chú và ngữ cảnh sử dụng.
-- Tìm kiếm, lọc và quản lý sổ từ vựng cá nhân.
-- Chuẩn bị tích hợp AI thật ở Phase 3.
+![K-Dict personal vocabulary](docs/assets/demo-dictionary.png)
 
-## Công Nghệ
+![K-Dict exercises](docs/assets/demo-exercises.png)
+
+## Tính năng
+
+- Google Login qua frontend và backend `/auth/google`.
+- JWT lưu ở client và tự gắn vào các request cần đăng nhập.
+- Analyze text bằng Gemini AI, có retry ngắn để giảm lỗi provider tạm thời.
+- CRUD vocabulary theo từng user bằng `user_id`.
+- Tìm kiếm, lọc loại từ và phân trang sổ từ vựng.
+- Trang Profile hiển thị thông tin Google, thống kê học tập và từ mới lưu.
+- Trang Exercises gồm quiz, flashcard, luyện code và danh sách từ hay quên.
+- Giao diện React/Vite, TailwindCSS, dark theme và sidebar thu gọn.
+
+## Công nghệ
 
 | Tầng | Công nghệ |
 | --- | --- |
 | Backend | FastAPI, SQLAlchemy, Pydantic |
-| Database | SQLite |
+| Auth | Google OAuth ID token, JWT |
+| AI | Gemini qua `google-genai` |
+| Database | SQLite local |
 | Frontend | React + Vite |
-| Styling | TailwindCSS + shadcn/ui |
-| Deploy | Ubuntu VPS, Nginx, Docker Compose ở phase sau |
-| CI/CD | GitHub Actions ở phase sau |
+| Styling | TailwindCSS + shadcn/ui primitives |
 
-## Cấu Trúc Dự Án
+## Cấu trúc dự án
 
 ```txt
 K-Dict/
 +-- api/
 |   +-- app/
 |   |   +-- core/
+|   |   +-- models/
 |   |   +-- routers/
+|   |   +-- services/
 |   |   +-- database.py
 |   |   +-- main.py
-|   |   +-- models.py
 |   |   +-- schemas.py
 |   +-- data/
 |   +-- scripts/
@@ -43,12 +53,11 @@ K-Dict/
 |   +-- src/
 |   |   +-- api/
 |   |   +-- components/
+|   |   +-- hooks/
 |   |   +-- layouts/
 |   |   +-- pages/
 |   |   +-- App.jsx
 |   |   +-- main.jsx
-|   +-- package.json
-|   +-- vite.config.js
 +-- docs/
 |   +-- API.md
 |   +-- ROADMAP.md
@@ -56,7 +65,7 @@ K-Dict/
 +-- README.md
 ```
 
-## Chạy Backend Local
+## Chạy backend local
 
 ```bash
 cd api
@@ -66,19 +75,21 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Backend chạy tại:
+Backend chạy tại `http://127.0.0.1:8000`.
+
+Biến môi trường cần có trong `api/.env`:
 
 ```txt
-http://127.0.0.1:8000
+AI_API_KEY=your_gemini_api_key
+AI_MODEL=gemini-3-flash-preview
+AI_DEFAULT_TAG=programmer
+GOOGLE_CLIENT_ID=your_google_client_id
+JWT_SECRET_KEY=your_jwt_secret
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=1440
 ```
 
-URL hữu ích:
-
-- Health check: `GET /api/health`
-- Swagger docs: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
-
-## Chạy Frontend Local
+## Chạy frontend local
 
 ```bash
 cd client
@@ -86,36 +97,16 @@ npm install
 npm run dev
 ```
 
-Frontend mặc định chạy tại:
+Frontend chạy tại `http://localhost:5173`.
+
+Biến môi trường cần có trong `client/.env`:
 
 ```txt
-http://localhost:5173
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
-## Tài Liệu
+## Tài liệu
 
 - [Cấu trúc dự án](docs/structure.md)
 - [Tài liệu API](docs/API.md)
-- [Roadmap](docs/ROADMAP.md)
-
-## Trạng Thái Hiện Tại
-
-Đã có:
-
-- Backend FastAPI kết nối SQLite.
-- CRUD vocabulary.
-- Tìm kiếm, lọc theo loại và phân trang.
-- Chống trùng vocabulary item.
-- Format lỗi nghiệp vụ dùng chung.
-- Analyze endpoint với fake response.
-- Frontend React/Vite MVP.
-- Trang Analyze để phân tích text và lưu item gợi ý.
-- Trang Dictionary để tìm kiếm, lọc, phân trang và xóa từ đã lưu.
-
-Cần làm tiếp:
-
-- Tích hợp AI thật cho analyze ở Phase 3.
-- Cleanup lỗi encoding tiếng Việt còn sót trong source.
-- Thêm test backend.
-- Thêm biến môi trường frontend cho API base URL.
-- Đồng bộ toàn bộ lỗi 404 sang `AppException`.
+- [Roadmap và ghi chú review](docs/ROADMAP.md)

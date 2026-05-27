@@ -5,7 +5,7 @@ import AnalyzeForm from '../components/AnalyzeForm'
 import AnalyzeResult from '../components/AnalyzeResult'
 import { Card, CardContent } from '../components/ui/card'
 
-function AnalyzePage() {
+function AnalyzePage({ isAuthenticated, onRequireAuth }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
@@ -14,7 +14,14 @@ function AnalyzePage() {
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSavedKeys(new Set())
+      return
+    }
+
     let active = true
+
     const fetchExistingVocab = async () => {
       try {
         const res = await vocabApi.getVocab({ page: 1, limit: 100 })
@@ -28,8 +35,11 @@ function AnalyzePage() {
     }
 
     fetchExistingVocab()
-    return () => { active = false }
-  }, [])
+
+    return () => {
+      active = false
+    }
+  }, [isAuthenticated])
 
   const handleAnalyzeText = async (text) => {
     setIsLoading(true)
@@ -47,6 +57,11 @@ function AnalyzePage() {
   }
 
   const handleSaveItem = async (item) => {
+    if (!isAuthenticated) {
+      onRequireAuth()
+      return
+    }
+
     const uniqueKey = `${item.text.toLowerCase()}_${item.type}`
 
     setSavingKeys(prev => new Set(prev).add(uniqueKey))

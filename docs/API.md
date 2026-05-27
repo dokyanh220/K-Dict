@@ -1,24 +1,22 @@
 # Tài Liệu API K-Dict
 
-Base URL khi phát triển local:
+Base URL local:
 
 ```txt
 http://127.0.0.1:8000
 ```
 
-Tài liệu tương tác:
+Swagger:
 
 ```txt
 http://127.0.0.1:8000/docs
 ```
 
-## Health Check
+## Health
 
 ### `GET /api/health`
 
-Kiểm tra backend có đang hoạt động hay không.
-
-Response hiện tại:
+Response:
 
 ```json
 {
@@ -26,13 +24,48 @@ Response hiện tại:
 }
 ```
 
-## Analyze Text
+## Auth
+
+### `POST /auth/google`
+
+Đăng nhập bằng Google ID token. Backend verify token với `GOOGLE_CLIENT_ID`, tạo hoặc cập nhật user, rồi trả JWT nội bộ cho app.
+
+Request:
+
+```json
+{
+  "id_token": "google_id_token"
+}
+```
+
+Response:
+
+```json
+{
+  "access_token": "jwt",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "name": "K-Dict User",
+    "avatar_url": "https://..."
+  }
+}
+```
+
+Các endpoint vocabulary cần header:
+
+```txt
+Authorization: Bearer <access_token>
+```
+
+## Analyze
 
 ### `POST /api/analyze`
 
-Phân tích text tiếng Anh và trả về bản dịch tiếng Việt cùng danh sách item gợi ý để lưu.
+Phân tích text tiếng Anh bằng Gemini AI, trả bản dịch tiếng Việt và danh sách item gợi ý để lưu.
 
-Trạng thái hiện tại: dùng Gemini AI thông qua backend service. Prompt phân tích được quản lý tập trung trong `api/app/services/ai_prompts.py`.
+Endpoint này hiện không bắt buộc đăng nhập, để người dùng có thể thử phân tích trước rồi đăng nhập khi lưu.
 
 Request:
 
@@ -45,9 +78,8 @@ Request:
 
 Validate:
 
-- `text` là bắt buộc.
-- Độ dài `text` từ 1 đến 5000 ký tự.
-- `tags` là optional. Nếu không truyền, backend dùng `AI_DEFAULT_TAG` trong cấu hình.
+- `text` bắt buộc, dài từ 1 đến 5000 ký tự.
+- `tags` optional; nếu không truyền, backend dùng `AI_DEFAULT_TAG`.
 
 Response:
 
@@ -68,16 +100,19 @@ Response:
 }
 ```
 
-Ghi chú kỹ thuật:
+Ghi chú:
 
 - Backend gọi model theo `AI_MODEL`.
-- Provider hiện tại là Gemini.
-- AI response được yêu cầu trả JSON nghiêm ngặt và được validate bằng Pydantic trước khi trả về client.
-- Khi provider lỗi, response rỗng, JSON sai hoặc output sai schema, API trả `ANALYZE_FAILED` với HTTP `502`.
+- AI response được yêu cầu trả JSON và validate bằng Pydantic.
+- Request Gemini được retry ngắn bằng `tenacity`.
+- Nếu provider lỗi, response rỗng, JSON sai hoặc output sai schema, API trả `ANALYZE_FAILED` với HTTP `502`.
+- Khi `APP_DEBUG=true`, response lỗi có thể kèm `details` để debug local.
 
 ## Vocabulary
 
-Shape của một vocabulary item:
+Vocabulary item thuộc về user hiện tại qua `user_id`.
+
+Shape response:
 
 ```json
 {
@@ -95,11 +130,9 @@ Shape của một vocabulary item:
 }
 ```
 
-`updated_at` đã có trong response schema nhưng model hiện chưa có cột tương ứng, nên giá trị thực tế có thể là `null`.
-
 ### `POST /api/vocab`
 
-Tạo một vocabulary item mới.
+Tạo vocabulary item mới cho user đang đăng nhập.
 
 Request:
 
@@ -118,30 +151,15 @@ Request:
 
 Response thành công: `201 Created`.
 
-```json
-{
-  "id": 1,
-  "text": "improve",
-  "type": "word",
-  "meaning_vi": "cải thiện",
-  "explanation_vi": "Làm cho điều gì đó tốt hơn",
-  "example_en": "I want to improve my English.",
-  "example_vi": "Tôi muốn cải thiện tiếng Anh của mình.",
-  "source_text": "I want to improve my English",
-  "note": "Từ hay dùng trong học tập và công việc",
-  "created_at": "2026-05-25T13:00:00",
-  "updated_at": null
-}
-```
+Chống trùng:
 
-Hành vi chống trùng:
-
-- Backend normalize `text` bằng cách trim, lowercase và gom khoảng trắng.
-- Nếu đã tồn tại item cùng `text` sau normalize và cùng `type`, API trả `409 Conflict`.
+- Backend normalize `text` bằng trim, lowercase và gom khoảng trắng.
+- Trùng chỉ tính trong cùng user và cùng `type`.
+- Nếu trùng, API trả `409 Conflict` với code `VOCAB_DUPLICATED`.
 
 ### `GET /api/vocab`
 
-Lấy danh sách vocabulary item.
+Lấy danh sách vocabulary item của user đang đăng nhập.
 
 Query params:
 
@@ -156,86 +174,27 @@ Response:
 
 ```json
 {
-  "items": [
-    {
-      "id": 1,
-      "text": "improve",
-      "type": "word",
-      "meaning_vi": "cải thiện",
-      "explanation_vi": "Làm cho điều gì đó tốt hơn",
-      "example_en": "I want to improve my English.",
-      "example_vi": "Tôi muốn cải thiện tiếng Anh của mình.",
-      "source_text": "I want to improve my English",
-      "note": "Từ hay dùng trong học tập và công việc",
-      "created_at": "2026-05-25T13:00:00",
-      "updated_at": null
-    }
-  ],
+  "items": [],
   "pagination": {
     "page": 1,
     "limit": 20,
-    "total": 1,
-    "total_pages": 1
+    "total": 0,
+    "total_pages": 0
   }
 }
 ```
 
 ### `GET /api/vocab/{item_id}`
 
-Lấy chi tiết một vocabulary item theo ID.
-
-Response thành công:
-
-```json
-{
-  "id": 1,
-  "text": "improve",
-  "type": "word",
-  "meaning_vi": "cải thiện",
-  "explanation_vi": "Làm cho điều gì đó tốt hơn",
-  "example_en": "I want to improve my English.",
-  "example_vi": "Tôi muốn cải thiện tiếng Anh của mình.",
-  "source_text": "I want to improve my English",
-  "note": "Từ hay dùng trong học tập và công việc",
-  "created_at": "2026-05-25T13:00:00",
-  "updated_at": null
-}
-```
+Lấy chi tiết một vocabulary item. User chỉ truy cập được item của chính mình.
 
 ### `PUT /api/vocab/{item_id}`
 
-Cập nhật một vocabulary item theo ID. Request chỉ cần gửi field muốn thay đổi.
-
-Request:
-
-```json
-{
-  "meaning_vi": "cải thiện, nâng cao",
-  "note": "Đã gặp trong tài liệu deploy"
-}
-```
-
-Response:
-
-```json
-{
-  "id": 1,
-  "text": "improve",
-  "type": "word",
-  "meaning_vi": "cải thiện, nâng cao",
-  "explanation_vi": "Làm cho điều gì đó tốt hơn",
-  "example_en": "I want to improve my English.",
-  "example_vi": "Tôi muốn cải thiện tiếng Anh của mình.",
-  "source_text": "I want to improve my English",
-  "note": "Đã gặp trong tài liệu deploy",
-  "created_at": "2026-05-25T13:00:00",
-  "updated_at": null
-}
-```
+Cập nhật vocabulary item. Request chỉ cần gửi field muốn thay đổi.
 
 ### `DELETE /api/vocab/{item_id}`
 
-Xóa một vocabulary item theo ID.
+Xóa vocabulary item của user hiện tại.
 
 Response:
 
@@ -247,7 +206,7 @@ Response:
 
 ## Format Lỗi
 
-Các lỗi dùng `AppException` sẽ trả về shape:
+`AppException` trả về:
 
 ```json
 {
@@ -258,26 +217,14 @@ Các lỗi dùng `AppException` sẽ trả về shape:
 }
 ```
 
-Validation error:
-
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Request validation failed",
-    "details": []
-  }
-}
-```
-
-Các error code:
+Error code:
 
 | Code | HTTP status | Ý nghĩa |
 | --- | --- | --- |
 | `VALIDATION_ERROR` | 422 | Request body hoặc query params không hợp lệ |
-| `VOCAB_NOT_FOUND` | 404 | Không tồn tại vocabulary item |
-| `VOCAB_DUPLICATED` | 409 | Vocabulary item đã tồn tại |
+| `VOCAB_NOT_FOUND` | 404 | Không tồn tại vocabulary item hoặc không thuộc user hiện tại |
+| `VOCAB_DUPLICATED` | 409 | Vocabulary item đã tồn tại trong sổ của user |
 | `ANALYZE_FAILED` | 502 | AI provider hoặc analyze service bị lỗi |
 | `INTERNAL_ERROR` | 500 | Lỗi server ngoài dự kiến |
 
-Ghi chú: một vài nhánh `PUT` và `DELETE` hiện vẫn dùng `HTTPException` mặc định khi không tìm thấy item. Nên đồng bộ sang `AppException` ở lần cleanup tiếp theo.
+Ghi chú: một vài nhánh `PUT` và `DELETE` vẫn dùng `HTTPException` mặc định khi không tìm thấy item; nên đồng bộ sang `AppException` trong lần cleanup tiếp theo.

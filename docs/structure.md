@@ -1,6 +1,6 @@
 # Cấu Trúc Dự Án K-Dict
 
-Tài liệu này mô tả cấu trúc hiện tại của K-Dict sau Phase 2. Dự án gồm backend FastAPI, frontend React/Vite, tài liệu kỹ thuật và database SQLite local.
+Tài liệu này mô tả cấu trúc hiện tại của K-Dict sau khi bổ sung Google auth, vocabulary theo user, Gemini analyze, Profile và Exercises.
 
 ## Tổng Quan
 
@@ -9,7 +9,7 @@ K-Dict/
 +-- api/                 Backend FastAPI
 +-- client/              Frontend React + Vite
 +-- docs/                Tài liệu dự án
-+-- README.md            Giới thiệu và hướng dẫn chạy nhanh
++-- README.md            Hướng dẫn chạy nhanh và ảnh demo
 +-- .gitignore
 ```
 
@@ -21,16 +21,22 @@ api/
 |   +-- core/
 |   |   +-- config.py
 |   |   +-- errors.py
+|   |   +-- security.py
+|   +-- models/
+|   |   +-- __init__.py
+|   |   +-- users.py
+|   |   +-- vocab_item.py
 |   +-- routers/
 |   |   +-- analyze.py
+|   |   +-- auth.py
 |   |   +-- vocab.py
 |   +-- services/
 |   |   +-- ai_prompts.py
 |   |   +-- ai_service.py
 |   |   +-- analyze_service.py
+|   |   +-- auth_service.py
 |   +-- database.py
 |   +-- main.py
-|   +-- models.py
 |   +-- schemas.py
 +-- data/
 |   +-- vocab.db
@@ -42,85 +48,53 @@ api/
 
 ### `app/main.py`
 
-Entrypoint của backend.
-
-- Tạo instance FastAPI.
-- Đăng ký CORS theo cấu hình trong `.env`.
-- Đăng ký exception handler dùng chung.
+- Tạo FastAPI app.
+- Đăng ký CORS theo `.env`.
+- Đăng ký exception handlers.
 - Tạo bảng database khi chạy local.
-- Gắn router vocabulary và analyze.
+- Bổ sung migration nhẹ cho SQLite để thêm `vocab_items.user_id` nếu DB cũ chưa có.
+- Gắn router `auth`, `vocab`, `analyze`.
 - Cung cấp `GET /api/health`.
 
 ### `app/core/config.py`
 
 Quản lý cấu hình runtime bằng `pydantic-settings`.
 
-- `app_name`, `app_env`, `app_debug`.
-- `database_url`, mặc định là `sqlite:///./data/vocab.db`.
-- `cors_origins`, mặc định hỗ trợ frontend Vite ở `localhost:5173`.
-- `ai_provider`, `ai_api_key`, `ai_model`, `ai_default_tag` cho Gemini analyze service.
+- App: `app_name`, `app_env`, `app_debug`.
+- Database: `database_url`.
+- CORS: `cors_origins`.
+- AI: `ai_provider`, `ai_api_key`, `ai_model`, `ai_default_tag`.
+- Auth: `GOOGLE_CLIENT_ID`, `JWT_SECRET_KEY`, `JWT_ALGORITHM`, `JWT_EXPIRE_MINUTES`.
 
-### `app/core/errors.py`
+### `app/core/security.py`
 
-Chuẩn hóa response lỗi nghiệp vụ.
+- Đọc Bearer token từ request.
+- Decode JWT bằng cấu hình trong `.env`.
+- Tải user hiện tại từ database.
+- Trả `401` khi token sai hoặc user không tồn tại.
 
-Shape lỗi:
+### `app/models/`
 
-```json
-{
-  "error": {
-    "code": "VOCAB_DUPLICATED",
-    "message": "Từ vựng đã tồn tại"
-  }
-}
-```
+`users.py`:
 
-Các mã lỗi hiện có: `VALIDATION_ERROR`, `VOCAB_NOT_FOUND`, `VOCAB_DUPLICATED`, `ANALYZE_FAILED`, `INTERNAL_ERROR`.
+- Lưu thông tin user Google: `google_sub`, `email`, `name`, `avatar_url`, `provider`.
+- Lưu timestamp tạo, cập nhật và lần đăng nhập gần nhất.
 
-### `app/database.py`
+`vocab_item.py`:
 
-Thiết lập SQLAlchemy.
+- Lưu vocabulary item.
+- Có `user_id` để tách dữ liệu theo từng user.
 
-- Tạo engine từ `settings.database_url`.
-- Tạo `SessionLocal`.
-- Cung cấp base class `Base`.
-- Cung cấp dependency `get_db()` cho router.
+### `app/routers/auth.py`
 
-### `app/models.py`
-
-Chứa SQLAlchemy model `VocabItem`.
-
-| Field | Mục đích |
-| --- | --- |
-| `id` | Khóa chính |
-| `text` | Từ, cụm từ hoặc câu tiếng Anh |
-| `type` | `word`, `phrase` hoặc `sentence` |
-| `meaning_vi` | Nghĩa tiếng Việt |
-| `explanation_vi` | Giải thích tiếng Việt, optional |
-| `example_en` | Ví dụ tiếng Anh, optional |
-| `example_vi` | Bản dịch ví dụ, optional |
-| `source_text` | Ngữ cảnh gốc, optional |
-| `note` | Ghi chú cá nhân, optional |
-| `created_at` | Thời điểm tạo |
-
-### `app/schemas.py`
-
-Chứa Pydantic schema cho API contract.
-
-- `VocabCreate`
-- `VocabUpdate`
-- `VocabResponse`
-- `PaginationMeta`
-- `VocabListResponse`
-- `VocabType`
-
-Schema hiện đã thống nhất với model bằng field `meaning_vi`.
+- `POST /auth/google`
+- Verify Google ID token.
+- Tạo hoặc cập nhật user.
+- Trả JWT nội bộ cho frontend.
 
 ### `app/routers/vocab.py`
 
 Router quản lý sổ từ vựng cá nhân.
-
-Endpoint hiện có:
 
 - `POST /api/vocab`
 - `GET /api/vocab`
@@ -128,85 +102,70 @@ Endpoint hiện có:
 - `PUT /api/vocab/{item_id}`
 - `DELETE /api/vocab/{item_id}`
 
-Tính năng đã có:
-
-- Tạo vocabulary item.
-- Chặn trùng theo `text` sau normalize và `type`.
-- Tìm kiếm theo `text`, `meaning_vi`, `note`.
-- Lọc theo `type`.
-- Phân trang bằng `page` và `limit`.
-- Lấy chi tiết, cập nhật và xóa item.
+Tất cả endpoint vocabulary hiện yêu cầu user đăng nhập và chỉ thao tác trên item có `user_id` khớp user hiện tại.
 
 ### `app/routers/analyze.py`
 
-Router phân tích text tiếng Anh.
-
-- Nhận input tiếng Anh qua `POST /api/analyze`.
-- Nhận optional `tags` để ưu tiên ngữ cảnh học từ vựng.
-- Trả về `translated_vi`, `input_type` và danh sách item gợi ý để lưu.
-- Gọi `AnalyzeService`, validate output AI và chuẩn hóa lỗi thành `ANALYZE_FAILED`.
-
-### `app/services/analyze_service.py`
-
-Service nghiệp vụ cho analyze.
-
-- Gọi AI service để phân tích text.
-- Validate output bằng Pydantic model nội bộ trước khi trả response.
-- Chuyển lỗi AI hoặc lỗi validate thành `AnalyzeServiceError`.
+- `POST /api/analyze`
+- Nhận text tiếng Anh và optional `tags`.
+- Gọi `AnalyzeService`.
+- Trả `ANALYZE_FAILED` với HTTP `502` khi AI provider hoặc validate output lỗi.
+- Log lỗi gốc để debug local.
 
 ### `app/services/ai_service.py`
 
-Service tích hợp Gemini.
-
-- Làm sạch input text và giới hạn độ dài.
-- Normalize `tags`, fallback về `ai_default_tag` khi không có tag hợp lệ.
+- Làm sạch input text.
+- Normalize tags, fallback về `ai_default_tag`.
 - Gọi Gemini bằng `google-genai`.
-- Parse JSON response và loại bỏ code fence nếu provider trả dư định dạng markdown.
+- Parse JSON response, xử lý code fence nếu có.
+- Retry ngắn với `tenacity` cho lỗi provider/response transient.
 
-### `app/services/ai_prompts.py`
+### `app/services/analyze_service.py`
 
-Module quản lý prompt dùng chung cho AI analyze.
+- Gọi AI service.
+- Validate output bằng Pydantic model nội bộ.
+- Retry ngắn nếu response AI lệch schema tạm thời.
+- Chuyển lỗi thành `AnalyzeServiceError`.
 
-- Chứa `MASTER_ANALYZE_PROMPT`.
-- Chứa `TAG_CONTEXTS` cho các nhóm học như `programmer`, `doctor`, `chef`, `student`, `business`, `travel`.
-- Cung cấp `build_analyze_prompt()` và `build_tag_context()` để phát triển prompt tập trung một nơi.
+### `app/services/auth_service.py`
+
+- Verify Google ID token.
+- Tạo JWT access token.
 
 ## Frontend: `client/`
 
 ```txt
 client/
-+-- components.json
-+-- postcss.config.js
-+-- tailwind.config.js
 +-- public/
-|   +-- favicon.svg
-|   +-- icons.svg
-|   +-- parroto_mascot.png
 +-- src/
 |   +-- api/
+|   |   +-- authApi.js
 |   |   +-- vocabApi.js
-|   +-- assets/
-|   |   +-- hero.png
-|   |   +-- react.svg
-|   |   +-- vite.svg
 |   +-- components/
 |   |   +-- ui/
 |   |   +-- AnalyzeForm.jsx
 |   |   +-- AnalyzeResult.jsx
 |   |   +-- AuthModal.jsx
 |   |   +-- Header.jsx
+|   |   +-- LogoutModal.jsx
 |   |   +-- SearchBar.jsx
+|   |   +-- Sidebar.jsx
 |   |   +-- TypeFilter.jsx
 |   |   +-- VocabCard.jsx
 |   |   +-- VocabList.jsx
+|   |   +-- icons.jsx
+|   +-- hooks/
+|   |   +-- useAuth.js
 |   +-- layouts/
 |   |   +-- MainLayout.jsx
 |   +-- lib/
+|   |   +-- axios.js
 |   |   +-- utils.js
 |   +-- pages/
 |   |   +-- AnalyzePage.jsx
 |   |   +-- DictionaryPage.jsx
-|   +-- App.css
+|   |   +-- ExercisesPage.jsx
+|   |   +-- ProfilePage.jsx
 |   +-- App.jsx
 |   +-- index.css
 |   +-- main.jsx
@@ -214,109 +173,67 @@ client/
 +-- vite.config.js
 ```
 
+### `src/main.jsx`
+
+- Bọc app bằng `GoogleOAuthProvider`.
+- Đọc `VITE_GOOGLE_CLIENT_ID`.
+
+### `src/hooks/useAuth.js`
+
+- Lưu token và user vào `localStorage`.
+- Cung cấp `login`, `logout`, `isAuthenticated`.
+- Lắng nghe event `auth:logout` từ Axios interceptor khi backend trả `401`.
+
+### `src/lib/axios.js`
+
+- Tạo Axios instance với base URL backend.
+- Tự gắn `Authorization: Bearer <token>`.
+- Xóa local auth và phát event logout khi gặp `401`.
+- Chuẩn hóa message lỗi cho UI.
+
 ### `src/App.jsx`
 
-Quản lý state cấp ứng dụng:
-
-- Trang hiện tại: `analyze` hoặc `dictionary`.
-- Trạng thái modal đăng nhập.
-- Trạng thái thu gọn sidebar.
-- Search keyword truyền từ header sang trang dictionary.
-
-### `src/layouts/MainLayout.jsx`
-
-Layout chính của frontend.
-
-- Sidebar điều hướng.
-- Header.
-- Khu vực render page.
-- Nút đăng nhập và nút thu gọn sidebar.
-
-### `tailwind.config.js`, `postcss.config.js`, `components.json`
-
-Cấu hình TailwindCSS và shadcn/ui.
-
-- `tailwind.config.js`: khai báo content scan, theme token và CSS variables theo style shadcn.
-- `postcss.config.js`: bật TailwindCSS và Autoprefixer trong pipeline Vite.
-- `components.json`: metadata để tiếp tục thêm shadcn component về sau.
-
-### `src/lib/utils.js`
-
-Chứa helper `cn()` dùng `clsx` và `tailwind-merge`, theo pattern mặc định của shadcn/ui.
-
-### `src/components/ui/`
-
-Chứa các primitive shadcn/ui local đang dùng:
-
-- `button.jsx`
-- `card.jsx`
-- `input.jsx`
-- `textarea.jsx`
-- `badge.jsx`
-- `dialog.jsx`
-
-### `src/api/vocabApi.js`
-
-Wrapper gọi API backend.
-
-- `analyzeText(text)`
-- `getVocab({ search, type, page, limit })`
-- `saveVocab(vocabData)`
-- `deleteVocab(itemId)`
-
-Base URL hiện tại: `http://127.0.0.1:8000`.
+- Quản lý page hiện tại: `analyze`, `dictionary`, `exercises`, `profile`.
+- Chặn truy cập các page cá nhân nếu chưa đăng nhập.
+- Mở auth modal khi user cần đăng nhập.
+- Truyền user/auth state xuống layout và page.
 
 ### `src/pages/AnalyzePage.jsx`
 
-Trang phân tích text.
-
-- Gửi text đến `POST /api/analyze`.
-- Hiển thị kết quả dịch và item gợi ý.
-- Lưu từng item vào sổ từ.
-- Đánh dấu item đã lưu hoặc đang lưu.
-- Tải trước danh sách từ đã có để tránh lưu trùng trên UI.
+- Cho phép analyze khi chưa đăng nhập.
+- Khi đã đăng nhập, tải vocab hiện có để đánh dấu item đã lưu.
+- Khi lưu item mà chưa đăng nhập, mở modal đăng nhập.
 
 ### `src/pages/DictionaryPage.jsx`
 
-Trang sổ từ vựng cá nhân.
+- Yêu cầu đăng nhập.
+- Tải vocab của user hiện tại từ `GET /api/vocab`.
+- Tìm kiếm, lọc theo type, phân trang và xóa item.
 
-- Tải danh sách từ từ `GET /api/vocab`.
-- Tìm kiếm có debounce.
-- Lọc theo `word`, `phrase`, `sentence`.
-- Phân trang.
-- Xóa item.
+### `src/pages/ProfilePage.jsx`
 
-### `src/components/`
+- Hiển thị hồ sơ Google.
+- Hiển thị tổng số từ đã lưu và các chỉ số học tập.
+- Hiển thị các từ mới lưu gần đây.
+- Có quick settings cho thông báo và dark theme.
 
-Các component giao diện nhỏ:
+### `src/pages/ExercisesPage.jsx`
 
-- `AnalyzeForm.jsx`: form nhập text.
-- `AnalyzeResult.jsx`: hiển thị kết quả analyze và nút lưu.
-- `AuthModal.jsx`: modal đăng nhập ở mức UI.
-- `Header.jsx`: thanh header và search nhanh.
-- `SearchBar.jsx`: input tìm kiếm.
-- `TypeFilter.jsx`: bộ lọc loại từ.
-- `VocabCard.jsx`: card hiển thị một vocabulary item.
-- `VocabList.jsx`: danh sách vocabulary item.
+- Màn hình luyện tập tĩnh phía client.
+- Có quiz, flashcard, bài luyện code và danh sách từ hay quên.
+- Có tương tác chọn đáp án, lật thẻ, đánh dấu đã thuộc và phát âm.
 
-## Tài Liệu: `docs/`
+## Docs
 
 ```txt
 docs/
 +-- API.md
 +-- ROADMAP.md
 +-- structure.md
++-- assets/
 ```
 
 - `API.md`: contract API hiện tại.
-- `ROADMAP.md`: kế hoạch phát triển theo phase.
-- `structure.md`: cấu trúc dự án và trách nhiệm từng phần.
-
-## Ghi Chú Hiện Trạng
-
-- Backend và frontend đã hoàn thành MVP ở mức chạy local.
-- Analyze đã dùng Gemini AI thật thông qua `ai_service.py`.
-- Prompt analyze đã được tách sang `ai_prompts.py` để dễ phát triển.
-- Frontend hiện dùng TailwindCSS + shadcn/ui. `App.css` chỉ còn là placeholder mỏng.
-- Một số text tiếng Việt trong code cũ đang bị lỗi encoding, nên cần cleanup ở phase bảo trì gần nhất.
-- `client/node_modules`, `client/dist`, `__pycache__` và database local không nên được mô tả như source chính của dự án.
+- `ROADMAP.md`: kế hoạch phát triển và ghi chú review.
+- `structure.md`: cấu trúc dự án và trách nhiệm từng module.
+- `assets/`: ảnh demo dùng trong README.
