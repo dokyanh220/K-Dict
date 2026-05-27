@@ -6,10 +6,6 @@ K-Dict là ứng dụng học từ vựng tiếng Anh lập trình. Ứng dụng
 
 ![K-Dict profile dashboard](docs/assets/demo-profile.png)
 
-![K-Dict personal vocabulary](docs/assets/demo-dictionary.png)
-
-![K-Dict exercises](docs/assets/demo-exercises.png)
-
 ## Tính năng
 
 - Google Login qua frontend và backend `/auth/google`.
