@@ -57,6 +57,12 @@ Cần hoàn thiện:
 - Backfill owner cho dữ liệu cũ ngoài các dòng đã cập nhật thủ công.
 - Đồng bộ `PUT` và `DELETE` not-found sang `AppException`.
 - Thêm test auth và permission.
+- Đăng nhập qua email, smtp gửi link đăng nhập qua email:
+    - Email register
+    - Magic link login
+    - GitHub login
+    - Device sessions
+    - Session revoke
 
 Test cần có:
 
@@ -87,11 +93,7 @@ Cần hoàn thiện:
 ## Review Gần Nhất
 
 Findings:
-
-- `client/src/main.jsx` đang `console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID)`. Client ID không phải secret, nhưng log này nên bỏ để console production sạch hơn.
 - `client/src/hooks/useAuth.js` dùng `JSON.parse(storedUser)` mà không bắt lỗi. Nếu localStorage bị hỏng, app có thể crash lúc load.
-- `api/app/services/auth_service.py` đang `print` lỗi Google token và in cả `GOOGLE_CLIENT_ID`. Nên chuyển sang logger và tránh in cấu hình auth trong log.
-- `api/data/vocab.db` đang bị thay đổi trong working tree. Đây là dữ liệu local, nên cân nhắc không commit DB hoặc chuyển sang seed/migration riêng.
 
 ## Phase 4: Tối Ưu Dữ Liệu
 

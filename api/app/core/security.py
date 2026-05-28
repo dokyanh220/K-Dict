@@ -22,6 +22,9 @@ def get_current_user(
             algorithms=[get_settings().JWT_ALGORITHM]
         )
 
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+
         user_id = payload.get("sub")
 
         if not user_id:

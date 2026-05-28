@@ -5,7 +5,7 @@ export function useAuth() {
   const [token, setToken] = useState(null)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token')
+    const storedToken = localStorage.getItem('accessToken')
     const storedUser = localStorage.getItem('user')
 
     if (storedToken && storedUser) {
@@ -27,7 +27,8 @@ export function useAuth() {
   }, [])
 
   const login = authData => {
-    localStorage.setItem('token', authData.access_token)
+    localStorage.setItem('accessToken', authData.access_token)
+    localStorage.setItem('refreshToken', authData.refresh_token)
     localStorage.setItem('user', JSON.stringify(authData.user))
 
     setToken(authData.access_token)
@@ -35,7 +36,8 @@ export function useAuth() {
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
 
     setToken(null)
